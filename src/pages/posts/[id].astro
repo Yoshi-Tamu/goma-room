@@ -1,0 +1,100 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+	const posts = await getCollection('posts');
+
+	return posts.map((post) => ({
+		params: { id: post.id },
+		props: { post },
+	}));
+}
+
+interface Props {
+	post: CollectionEntry<'posts'>;
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const publishedAt = new Intl.DateTimeFormat('ja-JP', {
+	year: 'numeric',
+	month: 'long',
+	day: 'numeric',
+}).format(post.data.publishedAt);
+---
+
+<BaseLayout title={`${post.data.title} | ごま`} description={post.data.description}>
+	<article>
+		<header class="post-header">
+			<h1>{post.data.title}</h1>
+			<time datetime={post.data.publishedAt.toISOString()}>{publishedAt}</time>
+		</header>
+
+		<div class="post-body">
+			<Content />
+		</div>
+
+		<p class="back"><a href="/posts/">← Postsへ戻る</a></p>
+	</article>
+</BaseLayout>
+
+<style>
+	.post-header {
+		margin-bottom: 3rem;
+	}
+
+	h1 {
+		margin: 0 0 0.75rem;
+		font-size: clamp(1.8rem, 6vw, 2.4rem);
+		line-height: 1.4;
+		letter-spacing: -0.03em;
+	}
+
+	time {
+		color: var(--muted);
+		font-size: 0.875rem;
+	}
+
+	.post-body {
+		line-height: 2;
+	}
+
+	.post-body :global(h2) {
+		margin: 3rem 0 1rem;
+		font-size: 1.35rem;
+	}
+
+	.post-body :global(h3) {
+		margin: 2.5rem 0 1rem;
+		font-size: 1.1rem;
+	}
+
+	.post-body :global(p),
+	.post-body :global(ul),
+	.post-body :global(ol),
+	.post-body :global(pre) {
+		margin-block: 1.25rem;
+	}
+
+	.post-body :global(pre) {
+		overflow-x: auto;
+		padding: 1rem;
+		border: 1px solid var(--line);
+		font-size: 0.875rem;
+		line-height: 1.6;
+	}
+
+	.post-body :global(:not(pre) > code) {
+		padding: 0.1em 0.3em;
+		background: #f3f3f3;
+		font-size: 0.9em;
+	}
+
+	.back {
+		margin-top: 4rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--line);
+		font-size: 0.9rem;
+	}
+</style>

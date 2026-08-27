@@ -1,0 +1,45 @@
+:root {
+	--text: #171717;
+	--muted: #686868;
+	--line: #dedede;
+	--background: #ffffff;
+	font-family:
+		-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+	font-synthesis: none;
+	color-scheme: light;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	background: var(--background);
+	color: var(--text);
+	font-size: 16px;
+	line-height: 1.8;
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+}
+
+a {
+	color: inherit;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.2em;
+}
+
+a:hover {
+	text-decoration-thickness: 2px;
+}
+
+a:focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: 3px;
+}
+
+::selection {
+	background: #e5e5e5;
+}

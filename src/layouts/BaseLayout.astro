@@ -1,0 +1,83 @@
+---
+import '../styles/global.css';
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const {
+	title,
+	description = 'ごまの制作物と日々の記録を置く個人サイトです。',
+} = Astro.props;
+const isHome = Astro.url.pathname === '/';
+---
+
+<!doctype html>
+<html lang="ja">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<title>{title}</title>
+	</head>
+	<body>
+		<div class="page">
+			{!isHome && (
+				<header class="site-header">
+					<a class="site-name" href="/">ごま</a>
+					<nav aria-label="メインナビゲーション">
+						<a href="/posts/">Posts</a>
+						<a href="https://github.com/" rel="me">GitHub</a>
+					</nav>
+				</header>
+			)}
+
+			<main>
+				<slot />
+			</main>
+		</div>
+	</body>
+</html>
+
+<style>
+	.page {
+		width: min(100% - 2.5rem, 42rem);
+		margin-inline: auto;
+		padding-block: 5rem 6rem;
+	}
+
+	.site-header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 1.5rem;
+		margin-bottom: 4rem;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid var(--line);
+	}
+
+	.site-name {
+		color: var(--text);
+		font-weight: 700;
+		text-decoration: none;
+	}
+
+	nav {
+		display: flex;
+		gap: 1.25rem;
+		font-size: 0.9rem;
+	}
+
+	@media (max-width: 36rem) {
+		.page {
+			width: min(100% - 2rem, 42rem);
+			padding-block: 3rem 4rem;
+		}
+
+		.site-header {
+			margin-bottom: 3rem;
+		}
+	}
+</style>
