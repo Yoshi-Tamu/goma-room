@@ -1,10 +1,15 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostList from '../components/PostList.astro';
+import TilList from '../components/TilList.astro';
 import { getCollection } from 'astro:content';
 import { works } from '../data/works';
 
 const posts = (await getCollection('posts')).sort(
+	(a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf(),
+);
+
+const tils = (await getCollection('tils')).sort(
 	(a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf(),
 );
 ---
@@ -41,6 +46,14 @@ const posts = (await getCollection('posts')).sort(
 			<a href="/posts/">すべて見る</a>
 		</div>
 		<PostList posts={posts.slice(0, 5)} />
+	</section>
+
+	<section aria-labelledby="tils-heading">
+		<div class="section-heading">
+			<h2 id="tils-heading">Tils</h2>
+			<a href="/tils/">すべて見る</a>
+		</div>
+		<TilList tils={tils.slice(0, 5)} />
 	</section>
 
 	<section aria-labelledby="links-heading">

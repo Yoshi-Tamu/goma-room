@@ -1,0 +1,100 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+	const tils = await getCollection('tils');
+
+	return tils.map((til) => ({
+		params: { id: til.id },
+		props: { til },
+	}));
+}
+
+interface Props {
+	til: CollectionEntry<'tils'>;
+}
+
+const { til } = Astro.props;
+const { Content } = await render(til);
+const publishedAt = new Intl.DateTimeFormat('ja-JP', {
+	year: 'numeric',
+	month: 'long',
+	day: 'numeric',
+}).format(til.data.publishedAt);
+---
+
+<BaseLayout title={`${til.data.title} | ごま部屋`} description={til.data.description}>
+	<article>
+		<header class="til-header">
+			<h1>{til.data.title}</h1>
+			<time datetime={til.data.publishedAt.toISOString()}>{publishedAt}</time>
+		</header>
+
+		<div class="til-body">
+			<Content />
+		</div>
+
+		<p class="back"><a href="/tils/">← Tilsへ戻る</a></p>
+	</article>
+</BaseLayout>
+
+<style>
+	.til-header {
+		margin-bottom: 3rem;
+	}
+
+	h1 {
+		margin: 0 0 0.75rem;
+		font-size: clamp(1.8rem, 6vw, 2.4rem);
+		line-height: 1.4;
+		letter-spacing: -0.03em;
+	}
+
+	time {
+		color: var(--muted);
+		font-size: 0.875rem;
+	}
+
+	.til-body {
+		line-height: 2;
+	}
+
+	.til-body :global(h2) {
+		margin: 3rem 0 1rem;
+		font-size: 1.35rem;
+	}
+
+	.til-body :global(h3) {
+		margin: 2.5rem 0 1rem;
+		font-size: 1.1rem;
+	}
+
+	.til-body :global(p),
+	.til-body :global(ul),
+	.til-body :global(ol),
+	.til-body :global(pre) {
+		margin-block: 1.25rem;
+	}
+
+	.til-body :global(pre) {
+		overflow-x: auto;
+		padding: 1rem;
+		border: 1px solid var(--line);
+		font-size: 0.875rem;
+		line-height: 1.6;
+	}
+
+	.til-body :global(:not(pre) > code) {
+		padding: 0.1em 0.3em;
+		background: #f3f3f3;
+		font-size: 0.9em;
+	}
+
+	.back {
+		margin-top: 4rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--line);
+		font-size: 0.9rem;
+	}
+</style>

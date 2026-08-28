@@ -1,0 +1,65 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+	tils: CollectionEntry<'tils'>[];
+}
+
+const { tils } = Astro.props;
+const dateFormatter = new Intl.DateTimeFormat('ja-JP', {
+	year: 'numeric',
+	month: '2-digit',
+	day: '2-digit',
+});
+---
+
+{
+	tils.length > 0 ? (
+		<ul class="til-list">
+			{tils.map((til) => (
+				<li>
+					<a href={`/tils/${til.id}/`}>{til.data.title}</a>
+					<time datetime={til.data.publishedAt.toISOString()}>
+						{dateFormatter.format(til.data.publishedAt)}
+					</time>
+				</li>
+			))}
+		</ul>
+	) : (
+		<p class="empty">まだTILはありません。</p>
+	)
+}
+
+<style>
+	.til-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.til-list li {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 1rem;
+		align-items: baseline;
+		padding-block: 0.75rem;
+		border-bottom: 1px solid var(--line);
+	}
+
+	.til-list li:first-child {
+		border-top: 1px solid var(--line);
+	}
+
+	time,
+	.empty {
+		color: var(--muted);
+		font-size: 0.85rem;
+	}
+
+	@media (max-width: 32rem) {
+		.til-list li {
+			grid-template-columns: 1fr;
+			gap: 0.2rem;
+		}
+	}
+</style>

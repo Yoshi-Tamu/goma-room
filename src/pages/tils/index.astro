@@ -1,0 +1,34 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TilList from '../../components/TilList.astro';
+
+const tils = (await getCollection('tils')).sort(
+	(a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf(),
+);
+---
+
+<BaseLayout title="Tils | ごま部屋" description="ごまの一日の学びのまとめ。">
+	<header class="page-heading">
+		<h1>Tils</h1>
+		<p>その日の学び</p>
+	</header>
+	<TilList tils={tils} />
+</BaseLayout>
+
+<style>
+	.page-heading {
+		margin-bottom: 2.5rem;
+	}
+
+	h1 {
+		margin: 0 0 0.5rem;
+		font-size: 2rem;
+		letter-spacing: -0.03em;
+	}
+
+	p {
+		margin: 0;
+		color: var(--muted);
+	}
+</style>
