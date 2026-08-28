@@ -10,7 +10,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 		<header class="work-header">
 			<p class="back-link"><a href="/#works-heading">← 作品一覧へ戻る</a></p>
 			<h1>オセローグ</h1>
-			<p>爆破と侵食を使って盤面を動かす、同じ端末で遊べる2人対戦オセロです。</p>
+			<p>爆破と侵食を使って盤面をかき乱す、同じ端末で遊べる2人対戦オセロです。</p>
 		</header>
 
 		<section class="game" aria-labelledby="game-heading">
@@ -41,7 +41,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 			<div class="game-stage">
 				<div id="game-controls">
 					<fieldset class="mode-controls">
-						<legend>この手で使う効果</legend>
+						<legend>アビリティ</legend>
 						<div class="mode-buttons">
 							<button type="button" data-mode="normal" aria-pressed="true">通常</button>
 							<button type="button" data-mode="blast" aria-pressed="false" disabled>
@@ -110,11 +110,8 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 		<section class="improvements" aria-labelledby="improvements-heading">
 			<h2 id="improvements-heading">Web版での改良</h2>
 			<ul>
-				<li>Unity版のルールを、インストール不要のWebゲームとして再構成</li>
-				<li>爆破を9手目から解禁し、周囲の相手石だけを消すルールへ調整</li>
-				<li>侵食効果が重複して適用される問題を修正</li>
-				<li>爆破と侵食を同時に選べないよう、特殊モードを排他化</li>
-				<li>再戦時に盤面・手番・残数が確実に初期化されるよう修正</li>
+				<li>Unity版(制作by Cynomys)のルールを、Webゲームとして再構成</li>
+				<li>爆破を9手目から解禁し、周囲の相手石だけを消すルールに変更</li>
 			</ul>
 		</section>
 	</article>

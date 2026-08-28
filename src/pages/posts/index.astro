@@ -8,10 +8,10 @@ const posts = (await getCollection('posts')).sort(
 );
 ---
 
-<BaseLayout title="Posts | ごま" description="ごまが書いた技術メモや日々の記録です。">
+<BaseLayout title="Posts | ごま" description="ごまが書いた技術メモや日々の記録集。">
 	<header class="page-heading">
 		<h1>Posts</h1>
-		<p>技術メモや、考えたこと。</p>
+		<p>技術メモとか、考えたこと。</p>
 	</header>
 	<PostList posts={posts} />
 </BaseLayout>
