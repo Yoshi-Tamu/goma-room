@@ -22,14 +22,14 @@ const tils = (await getCollection('tils')).sort(
 
 	<section aria-labelledby="now-heading">
 		<div class="section-heading">
-			<h2 id="now-heading">Now</h2><br>
+			<h2 id="now-heading">/Now</h2><br>
 			ごま部屋を育てています...<br>
 			<a href="/now/">すべて見る</a>
 		</div>
 	</section>
 
 	<section aria-labelledby="works-heading">
-		<h2 id="works-heading">Works</h2>
+		<h2 id="works-heading">/Works</h2>
 		<ul class="item-list">
 			{works.map((work) => (
 				<li>
@@ -42,7 +42,7 @@ const tils = (await getCollection('tils')).sort(
 
 	<section aria-labelledby="posts-heading">
 		<div class="section-heading">
-			<h2 id="posts-heading">Posts</h2>
+			<h2 id="posts-heading">/Posts</h2>
 			<a href="/posts/">すべて見る</a>
 		</div>
 		<PostList posts={posts.slice(0, 5)} />
@@ -50,14 +50,14 @@ const tils = (await getCollection('tils')).sort(
 
 	<section aria-labelledby="tils-heading">
 		<div class="section-heading">
-			<h2 id="tils-heading">Tils</h2>
+			<h2 id="tils-heading">/Lab</h2>
 			<a href="/tils/">すべて見る</a>
 		</div>
 		<TilList tils={tils.slice(0, 5)} />
 	</section>
 
 	<section aria-labelledby="links-heading">
-		<h2 id="links-heading">Links</h2>
+		<h2 id="links-heading">/Links</h2>
 		<ul class="item-list">
 			<li>
 				<a
