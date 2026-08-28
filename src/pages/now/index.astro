@@ -1,0 +1,35 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Now | ごま部屋" description="ごまが書いた技術メモや日々の記録集。">
+	<header class="page-heading">
+		<h1>/Now</h1>
+		<p>今やっていること</p>
+	</header>
+	2026-08-28<br>
+    <br>
+    今やっていること<br>
+    <br>
+    - ごま部屋を育てる<br>
+    - Git / GitHubをちゃんと覚える<br>
+    - Web技術をいろいろ試す<br>
+</BaseLayout>
+
+<style>
+	.page-heading {
+		margin-bottom: 2.5rem;
+	}
+
+	h1 {
+		margin: 0 0 0.5rem;
+		font-size: 2rem;
+		letter-spacing: -0.03em;
+	}
+
+	p {
+		margin: 0;
+		color: var(--muted);
+	}
+</style>
