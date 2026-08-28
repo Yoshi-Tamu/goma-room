@@ -20,16 +20,21 @@ const isHome = Astro.url.pathname === '/';
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
+		<link rel="icon" type="image/png" href="/favicon.png" />
 		<title>{title}</title>
 	</head>
 	<body>
 		<div class="page">
 			{!isHome && (
 				<header class="site-header">
-					<a class="site-name" href="/">ごま</a>
+					<a class="site-name" href="/">ごま部屋</a>
 					<nav aria-label="メインナビゲーション">
 						<a href="/posts/">Posts</a>
-						<a href="https://github.com/" rel="me">GitHub</a>
+						<a
+							href="https://github.com/Yoshi-Tamu"
+							target="_blank"
+							rel="me noopener noreferrer"
+						>GitHub</a>
 					</nav>
 				</header>
 			)}
