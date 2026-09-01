@@ -43,11 +43,6 @@ const {
 						<a href="/posts/">/Posts</a>
 						<a href="/tils/">/Til</a>
 						<a href="/#links-heading">/Links</a>
-						<a
-							href="https://github.com/Yoshi-Tamu"
-							target="_blank"
-							rel="me noopener noreferrer"
-						>GitHub</a>
 					</nav>
 				</details>
 			</div>
@@ -60,6 +55,28 @@ const {
 		</div>
 	</body>
 </html>
+
+<script>
+	const menus = document.querySelectorAll<HTMLDetailsElement>('.menu');
+
+	document.addEventListener('click', (event) => {
+		if (!(event.target instanceof Node)) return;
+
+		menus.forEach((menu) => {
+			if (menu.open && !menu.contains(event.target)) {
+				menu.open = false;
+			}
+		});
+	});
+
+	menus.forEach((menu) => {
+		menu.querySelectorAll('a').forEach((link) => {
+			link.addEventListener('click', () => {
+				menu.open = false;
+			});
+		});
+	});
+</script>
 
 <style>
 	.page {
