@@ -10,7 +10,6 @@ const {
 	title,
 	description = 'ごまの制作物と日々の記録を置く個人サイトです。',
 } = Astro.props;
-const isHome = Astro.url.pathname === '/';
 ---
 
 <!doctype html>
@@ -24,21 +23,37 @@ const isHome = Astro.url.pathname === '/';
 		<title>{title}</title>
 	</head>
 	<body>
-		<div class="page">
-			{!isHome && (
-				<header class="site-header">
-					<a class="site-name" href="/">ごま部屋</a>
-					<nav aria-label="メインナビゲーション">
+		<header class="site-header">
+			<div class="site-header-inner">
+				<a class="site-name" href="/">ごま部屋</a>
+
+				<details class="menu">
+					<summary class="menu-toggle">
+						<span class="menu-label">メニュー</span>
+						<span class="menu-icon" aria-hidden="true">
+							<span></span>
+							<span></span>
+							<span></span>
+						</span>
+					</summary>
+					<nav class="menu-panel" aria-label="メインナビゲーション">
+						<a href="/">/Home</a>
+						<a href="/now/">/Now</a>
+						<a href="/#works-heading">/Works</a>
 						<a href="/posts/">/Posts</a>
+						<a href="/tils/">/Til</a>
+						<a href="/#links-heading">/Links</a>
 						<a
 							href="https://github.com/Yoshi-Tamu"
 							target="_blank"
 							rel="me noopener noreferrer"
 						>GitHub</a>
 					</nav>
-				</header>
-			)}
+				</details>
+			</div>
+		</header>
 
+		<div class="page">
 			<main>
 				<slot />
 			</main>
@@ -50,17 +65,22 @@ const isHome = Astro.url.pathname === '/';
 	.page {
 		width: min(100% - 2.5rem, 42rem);
 		margin-inline: auto;
-		padding-block: 5rem 6rem;
+		padding-block: 4rem 6rem;
 	}
 
 	.site-header {
+		background: #f3f3f3;
+		border-bottom: 1px solid var(--line);
+	}
+
+	.site-header-inner {
+		width: min(100% - 2.5rem, 42rem);
+		min-height: 4rem;
+		margin-inline: auto;
 		display: flex;
-		align-items: baseline;
+		align-items: center;
 		justify-content: space-between;
 		gap: 1.5rem;
-		margin-bottom: 4rem;
-		padding-bottom: 1rem;
-		border-bottom: 1px solid var(--line);
 	}
 
 	.site-name {
@@ -69,10 +89,74 @@ const isHome = Astro.url.pathname === '/';
 		text-decoration: none;
 	}
 
-	nav {
+	.menu {
+		position: relative;
+	}
+
+	.menu-toggle {
+		display: grid;
+		width: 2.75rem;
+		height: 2.75rem;
+		cursor: pointer;
+		list-style: none;
+		place-items: center;
+	}
+
+	.menu-toggle::-webkit-details-marker {
+		display: none;
+	}
+
+	.menu-toggle:focus-visible {
+		outline: 2px solid currentColor;
+		outline-offset: 2px;
+	}
+
+	.menu-label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	.menu-icon {
+		display: grid;
+		width: 1.4rem;
+		gap: 0.3rem;
+	}
+
+	.menu-icon span {
+		display: block;
+		height: 1px;
+		background: currentColor;
+	}
+
+	.menu-panel {
+		position: absolute;
+		top: calc(100% + 0.6rem);
+		right: 0;
+		z-index: 10;
 		display: flex;
-		gap: 1.25rem;
+		min-width: 10rem;
+		padding-block: 0.45rem;
+		border: 1px solid var(--line);
+		background: var(--background);
+		flex-direction: column;
 		font-size: 0.9rem;
+	}
+
+	.menu-panel a {
+		padding: 0.45rem 1rem;
+		text-decoration: none;
+	}
+
+	.menu-panel a:hover,
+	.menu-panel a:focus-visible {
+		background: #f3f3f3;
 	}
 
 	@media (max-width: 36rem) {
@@ -81,8 +165,8 @@ const isHome = Astro.url.pathname === '/';
 			padding-block: 3rem 4rem;
 		}
 
-		.site-header {
-			margin-bottom: 3rem;
+		.site-header-inner {
+			width: min(100% - 2rem, 42rem);
 		}
 	}
 </style>
