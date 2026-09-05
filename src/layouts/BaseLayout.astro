@@ -10,6 +10,13 @@ const {
 	title,
 	description = 'ごまの制作物と日々の記録を置く個人サイトです。',
 } = Astro.props;
+
+const navigation = [
+	{ label: '/now', href: '/now/' },
+	{ label: '/til', href: '/tils/' },
+	{ label: '/works', href: '/#works-heading' },
+	{ label: '/posts', href: '/posts/' },
+];
 ---
 
 <!doctype html>
@@ -25,7 +32,11 @@ const {
 	<body>
 		<header class="site-header">
 			<div class="site-header-inner">
-				<a class="site-name" href="/">ごま部屋</a>
+				<a class="site-name" href="/">/goma-room</a>
+
+				<nav class="desktop-nav" aria-label="メインナビゲーション">
+					{navigation.map((item) => <a href={item.href}>{item.label}</a>)}
+				</nav>
 
 				<details class="menu">
 					<summary class="menu-toggle">
@@ -36,23 +47,39 @@ const {
 							<span></span>
 						</span>
 					</summary>
-					<nav class="menu-panel" aria-label="メインナビゲーション">
-						<a href="/">/Home</a>
-						<a href="/now/">/Now</a>
-						<a href="/#works-heading">/Works</a>
-						<a href="/posts/">/Posts</a>
-						<a href="/tils/">/Til</a>
-						<a href="/#links-heading">/Links</a>
+					<nav class="menu-panel" aria-label="モバイルナビゲーション">
+						{navigation.map((item) => <a href={item.href}>{item.label}</a>)}
 					</nav>
 				</details>
 			</div>
 		</header>
 
-		<div class="page">
-			<main>
-				<slot />
-			</main>
+		<div class="site-frame">
+			<div class="ambient ambient-left" aria-hidden="true"></div>
+			<div class="content-column">
+				<main>
+					<slot />
+				</main>
+			</div>
+			<div class="ambient ambient-right" aria-hidden="true"></div>
 		</div>
+
+		<footer class="site-footer">
+			<div class="site-footer-inner">
+				<nav class="footer-links" aria-label="関連リンク">
+					<a
+						href="https://github.com/Yoshi-Tamu"
+						target="_blank"
+						rel="me noopener noreferrer"
+					>github</a>
+					<a href="https://astro.build/" target="_blank" rel="noopener noreferrer">astro</a>
+					<a href="https://www.cloudflare.com/" target="_blank" rel="noopener noreferrer"
+						>cloudflare</a
+					>
+				</nav>
+				<span>2026</span>
+			</div>
+		</footer>
 	</body>
 </html>
 
@@ -79,35 +106,136 @@ const {
 </script>
 
 <style>
-	.page {
-		width: min(100% - 2.5rem, 42rem);
-		margin-inline: auto;
-		padding-block: 4rem 6rem;
+	.site-header,
+	.site-footer {
+		position: relative;
+		z-index: 20;
+		background: #111111;
+		color: #f7f7f7;
 	}
 
 	.site-header {
-		background: #f3f3f3;
-		border-bottom: 1px solid var(--line);
+		border-bottom: 1px solid #2d2d2d;
 	}
 
-	.site-header-inner {
-		width: min(100% - 2.5rem, 42rem);
-		min-height: 4rem;
+	.site-header-inner,
+	.site-footer-inner {
+		width: min(100% - 3rem, 56rem);
 		margin-inline: auto;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 1.5rem;
+		gap: 2rem;
+	}
+
+	.site-header-inner {
+		min-height: 4rem;
 	}
 
 	.site-name {
-		color: var(--text);
 		font-weight: 700;
+		letter-spacing: -0.02em;
 		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.desktop-nav,
+	.footer-links {
+		display: flex;
+		align-items: center;
+		gap: 1.25rem;
+	}
+
+	.desktop-nav {
+		font-size: 0.9rem;
+	}
+
+	.desktop-nav a,
+	.footer-links a {
+		color: inherit;
+		text-decoration: none;
+	}
+
+	.desktop-nav a:hover,
+	.desktop-nav a:focus-visible,
+	.footer-links a:hover,
+	.footer-links a:focus-visible {
+		text-decoration: underline;
+		text-underline-offset: 0.25em;
+	}
+
+	.site-frame {
+		display: grid;
+		width: 100%;
+		min-width: 0;
+		flex: 1;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 56rem) minmax(0, 1fr);
+		background: #fafafa;
+	}
+
+	.content-column {
+		min-width: 0;
+		background: var(--background);
+		border-inline: 1px solid var(--line);
+	}
+
+	main {
+		width: min(100% - 4rem, 42rem);
+		margin-inline: auto;
+		padding-block: 4rem 6rem;
+	}
+
+	.ambient {
+		position: relative;
+		min-width: 0;
+		overflow: hidden;
+		pointer-events: none;
+	}
+
+	.ambient::before {
+		position: absolute;
+		inset: -2rem;
+		content: '';
+		background-image:
+			linear-gradient(to right, rgb(17 17 17 / 0.035) 1px, transparent 1px),
+			linear-gradient(to bottom, rgb(17 17 17 / 0.035) 1px, transparent 1px);
+		background-size: 2rem 2rem;
+	}
+
+	.ambient-left::before {
+		animation: grid-drift-left 24s linear infinite;
+	}
+
+	.ambient-right::before {
+		background-position: 1rem 0.5rem;
+		animation: grid-drift-right 29s linear -9s infinite;
+	}
+
+	@keyframes grid-drift-left {
+		to {
+			background-position: 2rem 2rem;
+		}
+	}
+
+	@keyframes grid-drift-right {
+		to {
+			background-position: -1rem 2.5rem;
+		}
+	}
+
+	.site-footer {
+		border-top: 1px solid #2d2d2d;
+	}
+
+	.site-footer-inner {
+		min-height: 3.5rem;
+		font-size: 0.78rem;
+		color: #bdbdbd;
 	}
 
 	.menu {
 		position: relative;
+		display: none;
 	}
 
 	.menu-toggle {
@@ -156,34 +284,78 @@ const {
 		position: absolute;
 		top: calc(100% + 0.6rem);
 		right: 0;
-		z-index: 10;
+		z-index: 30;
 		display: flex;
 		min-width: 10rem;
 		padding-block: 0.45rem;
-		border: 1px solid var(--line);
-		background: var(--background);
+		border: 1px solid #393939;
+		background: #171717;
+		box-shadow: 0 0.4rem 1.2rem rgb(0 0 0 / 0.14);
 		flex-direction: column;
 		font-size: 0.9rem;
 	}
 
 	.menu-panel a {
 		padding: 0.45rem 1rem;
+		color: inherit;
 		text-decoration: none;
 	}
 
 	.menu-panel a:hover,
 	.menu-panel a:focus-visible {
-		background: #f3f3f3;
+		background: #292929;
 	}
 
-	@media (max-width: 36rem) {
-		.page {
+	@media (max-width: 64rem) {
+		.site-frame {
+			display: block;
+		}
+
+		.ambient {
+			display: none;
+		}
+
+		.content-column {
+			min-height: 100%;
+			border-inline: 0;
+		}
+	}
+
+	@media (max-width: 42rem) {
+		.site-header-inner,
+		.site-footer-inner {
+			width: min(100% - 2rem, 56rem);
+		}
+
+		.desktop-nav {
+			display: none;
+		}
+
+		.menu {
+			display: block;
+		}
+
+		main {
 			width: min(100% - 2rem, 42rem);
 			padding-block: 3rem 4rem;
 		}
 
-		.site-header-inner {
-			width: min(100% - 2rem, 42rem);
+		.site-footer-inner {
+			padding-block: 0.85rem;
+			align-items: flex-start;
+			flex-direction: column;
+			gap: 0.4rem;
+		}
+
+		.footer-links {
+			gap: 1rem;
+			flex-wrap: wrap;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.ambient::before {
+			animation: none;
 		}
 	}
 </style>
