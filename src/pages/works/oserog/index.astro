@@ -517,7 +517,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 		border: 0;
 		border-radius: 0;
 		background: #f1f1ec;
-		color: var(--text);
+		color: #191919;
 		font: inherit;
 		cursor: default;
 	}
@@ -535,7 +535,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 		place-items: center;
 		width: 76%;
 		aspect-ratio: 1;
-		border: 2px solid var(--text);
+		border: 2px solid #191919;
 		border-radius: 50%;
 		font-size: clamp(0.55rem, 2vw, 0.75rem);
 		font-weight: 700;
@@ -583,7 +583,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 		display: grid;
 		place-items: center;
 		padding: 1.5rem;
-		background: rgb(255 255 255 / 96%);
+		background: color-mix(in srgb, var(--background) 96%, transparent);
 		border: 1px solid var(--line);
 		z-index: 2;
 	}

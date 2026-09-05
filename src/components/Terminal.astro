@@ -1,9 +1,24 @@
+---
+interface Props {
+	revealAfterHero?: boolean;
+}
+
+const { revealAfterHero = false } = Astro.props;
+---
+
 <div class="terminal-spacer" aria-hidden="true"></div>
 
-<section class="terminal-dock" data-terminal data-open="false" aria-label="FLASH TERMINAL">
+<section
+	class="terminal-dock"
+	data-terminal
+	data-open="false"
+	data-available={revealAfterHero ? 'false' : 'true'}
+	data-reveal-after-hero={String(revealAfterHero)}
+	aria-label="TERMINAL"
+>
 	<div
 		class="terminal-panel-track"
-		id="flash-terminal-panel"
+		id="terminal-panel"
 		data-terminal-panel
 		aria-hidden="true"
 		inert
@@ -34,9 +49,9 @@
 			data-terminal-toggle
 			type="button"
 			aria-expanded="false"
-			aria-controls="flash-terminal-panel"
+			aria-controls="terminal-panel"
 		>
-			FLASH TERMINAL
+			OPEN TERMINAL
 		</button>
 	</div>
 </section>
@@ -76,6 +91,8 @@
 	const output = terminal?.querySelector<HTMLElement>('[data-terminal-output]');
 	const form = terminal?.querySelector<HTMLFormElement>('[data-terminal-form]');
 	const input = terminal?.querySelector<HTMLInputElement>('[data-terminal-input]');
+	const homeHero = document.querySelector<HTMLElement>('[data-home-hero]');
+	const waitsForHero = terminal?.dataset.revealAfterHero === 'true';
 
 	const initialState = (): TerminalState => ({
 		isOpen: false,
@@ -113,6 +130,7 @@
 	let state = restoreState();
 	let historyIndex = state.history.length;
 	let historyDraft = state.draft;
+	let heroPassed = !homeHero;
 
 	function saveState() {
 		try {
@@ -123,16 +141,17 @@
 	}
 
 	function applyBrand() {
-		if (state.brand !== 'dora') return;
+		const currentBrand = state.brand === 'dora' ? 'ごま部屋' : 'どら部屋';
+		const nextBrand = state.brand === 'dora' ? 'どら部屋' : 'ごま部屋';
 
-		document.title = document.title.replaceAll('ごま部屋', 'どら部屋');
+		document.title = document.title.replaceAll(currentBrand, nextBrand);
 		const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
 		let node = walker.nextNode();
 
 		while (node) {
 			const parent = node.parentElement;
 			if (parent && !parent.closest('script, style, template, noscript')) {
-				node.textContent = node.textContent?.replaceAll('ごま部屋', 'どら部屋') ?? '';
+				node.textContent = node.textContent?.replaceAll(currentBrand, nextBrand) ?? '';
 			}
 			node = walker.nextNode();
 		}
@@ -164,9 +183,19 @@
 		toggle.setAttribute('aria-expanded', String(isOpen));
 		panel.setAttribute('aria-hidden', String(!isOpen));
 		panel.inert = !isOpen;
-		toggle.textContent = isOpen ? 'CLOSE TERMINAL' : 'FLASH TERMINAL';
+		toggle.textContent = isOpen ? 'CLOSE TERMINAL' : 'OPEN TERMINAL';
+		updateAvailability();
 		saveState();
 		if (isOpen && focusInput) requestAnimationFrame(() => input?.focus());
+	}
+
+	function updateAvailability() {
+		if (!terminal || !toggle || !panel) return;
+		const isAvailable = !waitsForHero || state.isOpen || heroPassed;
+		terminal.dataset.available = String(isAvailable);
+		terminal.setAttribute('aria-hidden', String(!isAvailable));
+		toggle.tabIndex = isAvailable ? 0 : -1;
+		panel.inert = !isAvailable || !state.isOpen;
 	}
 
 	const routes: Record<string, string> = {
@@ -224,7 +253,11 @@
 		},
 		goma: {
 			hidden: true,
-			run: () => ({ lines: ['welcome to goma room.'] }),
+			run: () => {
+				state.brand = 'goma';
+				applyBrand();
+				return { lines: ['goma room.'] };
+			},
 		},
 		dora: {
 			hidden: true,
@@ -277,6 +310,18 @@
 		setOpen(state.isOpen);
 
 		toggle.addEventListener('click', () => setOpen(!state.isOpen, true));
+
+		if (waitsForHero && homeHero) {
+			const heroObserver = new IntersectionObserver((entries) => {
+				const entry = entries[0];
+				if (!entry) return;
+				heroPassed = !entry.isIntersecting && entry.boundingClientRect.bottom <= 0;
+				updateAvailability();
+			});
+			heroObserver.observe(homeHero);
+		} else {
+			updateAvailability();
+		}
 
 		form.addEventListener('submit', (event) => {
 			event.preventDefault();
@@ -335,6 +380,17 @@
 		z-index: 60;
 		color: #fff;
 		font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+		transition:
+			opacity 220ms ease,
+			transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+			visibility 220ms;
+	}
+
+	.terminal-dock[data-available='false'] {
+		opacity: 0;
+		visibility: hidden;
+		transform: translateY(100%);
+		pointer-events: none;
 	}
 
 	.terminal-panel-track {
@@ -459,6 +515,7 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
+		.terminal-dock,
 		.terminal-panel-track {
 			transition: none;
 		}

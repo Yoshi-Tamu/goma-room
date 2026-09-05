@@ -5,11 +5,13 @@ import Terminal from '../components/Terminal.astro';
 interface Props {
 	title: string;
 	description?: string;
+	isHome?: boolean;
 }
 
 const {
 	title,
 	description = 'ごまの制作物と日々の記録を置く個人サイトです。',
+	isHome = false,
 } = Astro.props;
 
 const navigation = [
@@ -29,25 +31,50 @@ const navigation = [
 		<meta name="description" content={description} />
 		<link rel="icon" type="image/png" href="/favicon.png" />
 		<title>{title}</title>
+		<script is:inline>
+			(() => {
+				try {
+					const saved = localStorage.getItem('goma-room-theme');
+					const theme = saved === 'light' || saved === 'dark' ? saved : 'light';
+					document.documentElement.dataset.theme = theme;
+				} catch {
+					document.documentElement.dataset.theme = 'light';
+				}
+			})();
+		</script>
 	</head>
-	<body>
+	<body class:list={{ 'home-page': isHome }}>
+		<slot name="hero" />
+
 		<header class="site-header">
 			<div class="site-header-inner">
 				<a class="site-name" href="/">ごま部屋</a>
 
-				<details class="menu">
-					<summary class="menu-toggle">
-						<span class="menu-label">メニュー</span>
-						<span class="menu-icon" aria-hidden="true">
-							<span></span>
-							<span></span>
-							<span></span>
-						</span>
-					</summary>
-					<nav class="menu-panel" aria-label="サイトナビゲーション">
-						{navigation.map((item) => <a href={item.href}>{item.label}</a>)}
-					</nav>
-				</details>
+				<div class="header-actions">
+					<button class="theme-toggle" type="button" data-theme-toggle aria-label="ダークテーマに切り替え">
+						<svg viewBox="0 0 24 24" aria-hidden="true">
+							<path class="theme-icon-moon" d="M20.3 15.3A8.5 8.5 0 0 1 8.7 3.7 8.5 8.5 0 1 0 20.3 15.3Z"></path>
+							<g class="theme-icon-sun">
+								<circle cx="12" cy="12" r="3.5"></circle>
+								<path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+							</g>
+						</svg>
+					</button>
+
+					<details class="menu">
+						<summary class="menu-toggle">
+							<span class="menu-label">メニュー</span>
+							<span class="menu-icon" aria-hidden="true">
+								<span></span>
+								<span></span>
+								<span></span>
+							</span>
+						</summary>
+						<nav class="menu-panel" aria-label="サイトナビゲーション">
+							{navigation.map((item) => <a href={item.href}>{item.label}</a>)}
+						</nav>
+					</details>
+				</div>
 			</div>
 		</header>
 
@@ -61,12 +88,15 @@ const navigation = [
 			<div class="ambient ambient-right" aria-hidden="true"></div>
 		</div>
 
-		<Terminal />
+		<Terminal revealAfterHero={isHome} />
 	</body>
 </html>
 
 <script>
 	const menus = document.querySelectorAll<HTMLDetailsElement>('.menu');
+	const root = document.documentElement;
+	const themeToggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 	document.addEventListener('click', (event) => {
 		if (!(event.target instanceof Node)) return;
@@ -85,15 +115,126 @@ const navigation = [
 			});
 		});
 	});
+
+	function updateThemeButton() {
+		if (!themeToggle) return;
+		const isDark = root.dataset.theme === 'dark';
+		const label = isDark ? 'ライトテーマに切り替え' : 'ダークテーマに切り替え';
+		themeToggle.setAttribute('aria-label', label);
+		themeToggle.title = label;
+	}
+
+	function applyTheme(theme: 'light' | 'dark', persist = true) {
+		root.dataset.theme = theme;
+		if (persist) {
+			try {
+				localStorage.setItem('goma-room-theme', theme);
+			} catch {
+				// The selected theme still applies for the current page.
+			}
+		}
+		updateThemeButton();
+	}
+
+	function runFallbackThemeTransition(
+		theme: 'light' | 'dark',
+		x: number,
+		y: number,
+		radius: number,
+	) {
+		if (!themeToggle) return;
+		const wipe = document.createElement('div');
+		wipe.className = 'theme-wipe';
+		wipe.style.setProperty('--theme-x', `${x}px`);
+		wipe.style.setProperty('--theme-y', `${y}px`);
+		wipe.style.setProperty('--theme-radius', `${radius}px`);
+		document.body.append(wipe);
+		themeToggle.disabled = true;
+
+		let completed = false;
+		const complete = () => {
+			if (completed) return;
+			completed = true;
+			applyTheme(theme);
+			wipe.remove();
+			themeToggle.disabled = false;
+		};
+
+		wipe.addEventListener('animationend', complete, { once: true });
+		window.setTimeout(complete, 1050);
+	}
+
+	updateThemeButton();
+
+	themeToggle?.addEventListener('click', () => {
+		const nextTheme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+		const transitionDocument = document as Document & {
+			startViewTransition?: (callback: () => void) => { finished: Promise<void> };
+		};
+
+		if (reducedMotion.matches) {
+			applyTheme(nextTheme);
+			return;
+		}
+
+		const rect = themeToggle.getBoundingClientRect();
+		const x = rect.left + rect.width / 2;
+		const y = rect.top + rect.height / 2;
+		const radius = Math.hypot(
+			Math.max(x, window.innerWidth - x),
+			Math.max(y, window.innerHeight - y),
+		) * 1.12;
+
+		if (!transitionDocument.startViewTransition) {
+			runFallbackThemeTransition(nextTheme, x, y, radius);
+			return;
+		}
+
+		root.style.setProperty('--theme-x', `${x}px`);
+		root.style.setProperty('--theme-y', `${y}px`);
+		root.style.setProperty('--theme-radius', `${radius}px`);
+		root.classList.add('theme-transitioning');
+		themeToggle.disabled = true;
+		const transition = transitionDocument.startViewTransition(() => applyTheme(nextTheme));
+
+		transition.finished.finally(() => {
+			root.classList.remove('theme-transitioning');
+			root.style.removeProperty('--theme-x');
+			root.style.removeProperty('--theme-y');
+			root.style.removeProperty('--theme-radius');
+			themeToggle.disabled = false;
+		});
+	});
+
+	if (!reducedMotion.matches && 'IntersectionObserver' in window) {
+		const revealTargets = document.querySelectorAll<HTMLElement>('.content-column main > *');
+		root.classList.add('reveal-enabled');
+		revealTargets.forEach((target) => target.dataset.reveal = '');
+
+		const revealObserver = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (!entry.isIntersecting) return;
+					entry.target.classList.add('is-visible');
+					revealObserver.unobserve(entry.target);
+				});
+			},
+			{ threshold: 0.08, rootMargin: '0px 0px -6% 0px' },
+		);
+
+		revealTargets.forEach((target) => revealObserver.observe(target));
+	}
 </script>
 
 <style>
 	.site-header {
-		position: relative;
+		position: sticky;
+		top: 0;
 		z-index: 20;
-		background: #f5f5f5;
+		background: color-mix(in srgb, var(--header-background) 94%, transparent);
 		color: var(--text);
 		border-bottom: 1px solid var(--line);
+		backdrop-filter: blur(8px);
 	}
 
 	.site-header-inner {
@@ -113,13 +254,63 @@ const navigation = [
 		white-space: nowrap;
 	}
 
+	.header-actions {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	.theme-toggle {
+		display: grid;
+		width: 2.5rem;
+		height: 2.5rem;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: inherit;
+		cursor: pointer;
+		place-items: center;
+	}
+
+	.theme-toggle:hover,
+	.theme-toggle:focus-visible {
+		background: var(--hover-background);
+	}
+
+	.theme-toggle:focus-visible {
+		outline: 2px solid currentColor;
+		outline-offset: 2px;
+	}
+
+	.theme-toggle svg {
+		width: 1.15rem;
+		height: 1.15rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		stroke-width: 1.6;
+	}
+
+	.theme-icon-sun {
+		display: none;
+	}
+
+	:global(:root[data-theme='dark']) .theme-icon-moon {
+		display: none;
+	}
+
+	:global(:root[data-theme='dark']) .theme-icon-sun {
+		display: block;
+	}
+
 	.site-frame {
 		display: grid;
 		width: 100%;
 		min-width: 0;
 		flex: 1;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 56rem) minmax(0, 1fr);
-		background: #fafafa;
+		background: var(--page-background);
 	}
 
 	.content-column {
@@ -146,8 +337,8 @@ const navigation = [
 		inset: -2rem;
 		content: '';
 		background-image:
-			linear-gradient(to right, rgb(17 17 17 / 0.06) 1px, transparent 1px),
-			linear-gradient(to bottom, rgb(17 17 17 / 0.06) 1px, transparent 1px);
+			linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+			linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
 		background-size: 2rem 2rem;
 	}
 
@@ -241,7 +432,20 @@ const navigation = [
 
 	.menu-panel a:hover,
 	.menu-panel a:focus-visible {
-		background: #f2f2f2;
+		background: var(--hover-background);
+	}
+
+	:global(html.reveal-enabled [data-reveal]) {
+		opacity: 0;
+		transform: translateY(0.8rem);
+		transition:
+			opacity 520ms ease,
+			transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	:global(html.reveal-enabled [data-reveal].is-visible) {
+		opacity: 1;
+		transform: translateY(0);
 	}
 
 	@media (max-width: 56rem) {

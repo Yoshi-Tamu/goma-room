@@ -14,15 +14,18 @@ const tils = (await getCollection('tils')).sort(
 );
 ---
 
-<BaseLayout title="ごま部屋" description="ごまの制作物と日々の記録を置く個人サイトです。">
-	<div class="intro-overlay" data-home-intro aria-hidden="true">
-		<span>/goma-room</span>
-	</div>
-
-	<header class="intro">
-		<h1>ごま部屋</h1>
-		<p>高専生。Webとかいろいろ作っています。勉強中。</p>
-	</header>
+<BaseLayout
+	title="ごま部屋"
+	description="ごまの制作物と日々の記録を置く個人サイトです。"
+	isHome
+>
+	<section slot="hero" class="home-hero" data-home-hero aria-labelledby="hero-title">
+		<div class="hero-copy">
+			<h1 id="hero-title">ごま部屋</h1>
+			<p>高専生。Webとかいろいろ作っています。勉強中。</p>
+		</div>
+		<span class="scroll-cue" aria-hidden="true">scroll</span>
+	</section>
 
 	<section aria-labelledby="now-heading">
 		<div class="section-heading">
@@ -74,93 +77,60 @@ const tils = (await getCollection('tils')).sort(
 	</section>
 </BaseLayout>
 
-<script>
-	const intro = document.querySelector<HTMLElement>('[data-home-intro]');
-
-	if (intro) {
-		let shouldPlay = false;
-
-		try {
-			shouldPlay = sessionStorage.getItem('goma-room-intro-seen') !== '1';
-			if (shouldPlay) sessionStorage.setItem('goma-room-intro-seen', '1');
-		} catch {
-			shouldPlay = true;
-		}
-
-		const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-		if (!shouldPlay || reducedMotion) {
-			intro.remove();
-		} else {
-			intro.addEventListener('animationend', () => intro.remove(), { once: true });
-		}
-	}
-</script>
-
 <style>
-	.intro-overlay {
-		position: fixed;
-		inset: 0;
-		z-index: 1000;
+	.home-hero {
+		position: relative;
 		display: grid;
-		place-items: center;
+		min-height: 100svh;
+		padding: clamp(2rem, 7vw, 6rem);
 		background: #000;
 		color: #fff;
-		pointer-events: none;
-		animation: intro-overlay-out 1.3s ease 0.2s forwards;
+		place-items: center;
 	}
 
-	.intro-overlay span {
-		font-size: clamp(1.1rem, 3vw, 1.5rem);
-		letter-spacing: 0.02em;
-		animation: intro-text-in 0.45s ease both;
+	.hero-copy {
+		width: min(100%, 42rem);
 	}
 
-	@keyframes intro-text-in {
+	.hero-copy h1 {
+		margin: 0;
+		font-size: clamp(3rem, 10vw, 6rem);
+		font-weight: 650;
+		letter-spacing: -0.055em;
+		line-height: 1.05;
+		animation: hero-enter 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	.hero-copy p {
+		margin: 1.25rem 0 0;
+		color: #bdbdbd;
+		font-size: clamp(0.95rem, 2vw, 1.05rem);
+		animation: hero-enter 800ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+	}
+
+	.scroll-cue {
+		position: absolute;
+		bottom: 1.75rem;
+		left: 50%;
+		color: #858585;
+		font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+		font-size: 0.68rem;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		transform: translateX(-50%);
+		animation: hero-enter 800ms ease 350ms both;
+	}
+
+	@keyframes hero-enter {
 		from {
 			opacity: 0;
-			transform: translateY(0.2rem);
+			transform: translateY(0.75rem);
 		}
 
 		to {
 			opacity: 1;
 			transform: translateY(0);
 		}
-	}
-
-	@keyframes intro-overlay-out {
-		0%,
-		65% {
-			opacity: 1;
-			visibility: visible;
-		}
-
-		100% {
-			opacity: 0;
-			visibility: hidden;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.intro-overlay {
-			display: none;
-			animation: none;
-		}
-	}
-
-	.intro {
-		margin-bottom: 4rem;
-	}
-
-	.intro h1 {
-		margin: 0 0 0.75rem;
-		font-size: clamp(2rem, 7vw, 2.75rem);
-		letter-spacing: -0.04em;
-	}
-
-	.intro p {
-		margin: 0;
-		color: var(--muted);
 	}
 
 	section + section {
@@ -202,10 +172,6 @@ const tils = (await getCollection('tils')).sort(
 	}
 
 	@media (max-width: 36rem) {
-		.intro {
-			margin-bottom: 3rem;
-		}
-
 		section + section {
 			margin-top: 2.75rem;
 		}
@@ -213,6 +179,14 @@ const tils = (await getCollection('tils')).sort(
 		.description {
 			display: block;
 			margin-top: 0.15rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hero-copy h1,
+		.hero-copy p,
+		.scroll-cue {
+			animation: none;
 		}
 	}
 </style>

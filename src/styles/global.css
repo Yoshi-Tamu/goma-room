@@ -3,10 +3,28 @@
 	--muted: #686868;
 	--line: #dedede;
 	--background: #ffffff;
+	--page-background: #fafafa;
+	--header-background: #f5f5f5;
+	--hover-background: #f2f2f2;
+	--selection-background: #e5e5e5;
+	--grid-line: rgb(17 17 17 / 0.06);
 	font-family:
 		-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
 	font-synthesis: none;
 	color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+	--text: #f0f0f0;
+	--muted: #a7a7a7;
+	--line: #383838;
+	--background: #151515;
+	--page-background: #101010;
+	--header-background: #171717;
+	--hover-background: #252525;
+	--selection-background: #454545;
+	--grid-line: rgb(255 255 255 / 0.07);
+	color-scheme: dark;
 }
 
 * {
@@ -26,7 +44,8 @@ body {
 	display: flex;
 	min-height: 100svh;
 	margin: 0;
-	overflow-x: hidden;
+	overflow-x: clip;
+	background: var(--page-background);
 	flex-direction: column;
 }
 
@@ -46,5 +65,67 @@ a:focus-visible {
 }
 
 ::selection {
-	background: #e5e5e5;
+	background: var(--selection-background);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation: none;
+	mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+	z-index: 1;
+}
+
+::view-transition-new(root) {
+	z-index: 2;
+}
+
+:root.theme-transitioning::view-transition-new(root) {
+	animation: theme-reveal 850ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@keyframes theme-reveal {
+	from {
+		clip-path: circle(0 at var(--theme-x) var(--theme-y));
+	}
+
+	to {
+		clip-path: circle(var(--theme-radius) at var(--theme-x) var(--theme-y));
+	}
+}
+
+.theme-wipe {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	background: #fff;
+	clip-path: circle(0 at var(--theme-x) var(--theme-y));
+	mix-blend-mode: difference;
+	pointer-events: none;
+	animation: theme-wipe-reveal 850ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes theme-wipe-reveal {
+	to {
+		clip-path: circle(var(--theme-radius) at var(--theme-x) var(--theme-y));
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root.theme-transitioning::view-transition-new(root) {
+		animation: none;
+	}
+
+	.theme-wipe {
+		display: none;
+		animation: none;
+	}
+
+	*,
+	*::before,
+	*::after {
+		scroll-behavior: auto !important;
+	}
 }
