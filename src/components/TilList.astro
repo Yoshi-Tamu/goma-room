@@ -18,7 +18,7 @@ const dateFormatter = new Intl.DateTimeFormat('ja-JP', {
 		<ul class="til-list">
 			{tils.map((til) => (
 				<li>
-					<a href={`/tils/${til.id}/`}>{til.data.title}</a>
+					<a href={`/til/${til.id}/`}>{til.data.title}</a>
 					<time datetime={til.data.publishedAt.toISOString()}>
 						{dateFormatter.format(til.data.publishedAt)}
 					</time>

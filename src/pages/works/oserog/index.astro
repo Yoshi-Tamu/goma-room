@@ -8,7 +8,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 >
 	<article class="work-page">
 		<header class="work-header">
-			<p class="back-link"><a href="/#works-heading">← 作品一覧へ戻る</a></p>
+			<p class="back-link"><a href="/works/">← 作品一覧へ戻る</a></p>
 			<h1>オセローグ</h1>
 			<p>爆破と侵食を使って盤面をかき乱す、同じ端末で遊べる2人対戦オセロです。</p>
 		</header>
@@ -75,7 +75,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 
 			<div class="game-actions">
 				<button id="reset-game" type="button">もう一度遊ぶ</button>
-				<a href="/#works-heading">作品一覧へ戻る</a>
+				<a href="/works/">作品一覧へ戻る</a>
 			</div>
 			<p id="announcement" class="visually-hidden" aria-live="polite" aria-atomic="true"></p>
 		</section>
@@ -112,6 +112,9 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 			<ul>
 				<li>Unity版(制作by Cynomys)のルールを、Webゲームとして再構成</li>
 				<li>爆破を9手目から解禁し、周囲の相手石だけを消すルールに変更</li>
+				<li>侵食効果の追加反転が二重適用されないように修正</li>
+				<li>特殊モードを排他的にし、使用後は通常モードへ戻るように調整</li>
+				<li>再戦時に盤面・手数・特殊手の残数を正しく初期化</li>
 			</ul>
 		</section>
 	</article>
@@ -154,7 +157,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 	};
 	const modeDescription: Record<MoveMode, string> = {
 		normal: '通常のオセロと同じように石を置きます。',
-		blast: '周囲8マスの石を消して配置します。通常の反転は行いません。',
+		blast: '周囲8マスの相手石だけを消して配置します。通常の反転は行いません。',
 		erosion: '通常反転の後、周囲の石を自色化し、追加反転を一度判定します。',
 	};
 
@@ -195,6 +198,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 				button.dataset.col = String(col);
 				button.setAttribute('aria-label', cellLabel(row, col, isLegal));
 				button.setAttribute('aria-disabled', String(!isLegal || state.gameOver));
+				button.disabled = !isLegal || state.gameOver;
 				if (isLegal) button.classList.add('is-legal');
 
 				if (cell !== null) {
@@ -228,10 +232,13 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 		whiteScore.textContent = String(score.white);
 		moveCount.textContent = `${state.completedMoves}手完了`;
 		const movesUntilBlast = Math.max(0, 8 - state.completedMoves);
+		const currentBlastStock = state.specials[state.currentPlayer].blast;
 		const blastTiming =
 			movesUntilBlast > 0
 				? `爆破は9手目から（あと${movesUntilBlast}手）`
-				: '爆破使用可能';
+				: currentBlastStock > 0
+					? `現在の${playerName(state.currentPlayer)}は爆破使用可能`
+					: `現在の${playerName(state.currentPlayer)}の爆破は残り0`;
 		specialStatus.textContent =
 			`黒：爆破${state.specials.black.blast}・侵食${state.specials.black.erosion}` +
 			` ／ 白：爆破${state.specials.white.blast}・侵食${state.specials.white.erosion}。${blastTiming}`;

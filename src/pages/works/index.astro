@@ -1,0 +1,57 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { works } from '../../data/works';
+---
+
+<BaseLayout title="/works | ごま部屋" description="ごまが作ったものの一覧です。">
+	<header class="page-heading">
+		<h1>/works</h1>
+		<p>作ったもの</p>
+	</header>
+
+	<ul class="work-list">
+		{works.map((work) => (
+			<li>
+				{work.url ? <a href={work.url}>{work.title}</a> : <span>{work.title}</span>}
+				<p>{work.description}</p>
+			</li>
+		))}
+	</ul>
+</BaseLayout>
+
+<style>
+	.page-heading {
+		margin-bottom: 2.5rem;
+	}
+
+	h1 {
+		margin: 0 0 0.5rem;
+		font-size: 2rem;
+		letter-spacing: -0.03em;
+	}
+
+	.page-heading p {
+		margin: 0;
+		color: var(--muted);
+	}
+
+	.work-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.work-list li {
+		padding-block: 1rem;
+		border-bottom: 1px solid var(--line);
+	}
+
+	.work-list li:first-child {
+		border-top: 1px solid var(--line);
+	}
+
+	.work-list p {
+		margin: 0.25rem 0 0;
+		color: var(--muted);
+	}
+</style>

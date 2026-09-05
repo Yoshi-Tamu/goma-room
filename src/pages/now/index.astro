@@ -1,20 +1,18 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="/now | ごま部屋" description="ごまが書いた技術メモや日々の記録集。">
+<BaseLayout title="/now | ごま部屋" description="ごまが現在取り組んでいることの記録です。">
 	<header class="page-heading">
 		<h1>/now</h1>
 		<p>今やっていること</p>
 	</header>
-	2026-08-28<br>
-    <br>
-    今やっていること<br>
-    <br>
-    - ごま部屋を育てる<br>
-    - Git / GitHubをちゃんと覚える<br>
-    - Web技術をいろいろ試す<br>
+	<time datetime="2026-08-28">2026-08-28</time>
+	<ul>
+		<li>ごま部屋を育てる</li>
+		<li>Git / GitHubをちゃんと覚える</li>
+		<li>Web技術をいろいろ試す</li>
+	</ul>
 </BaseLayout>
 
 <style>
@@ -31,5 +29,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 	p {
 		margin: 0;
 		color: var(--muted);
+	}
+
+	time {
+		color: var(--muted);
+		font-size: 0.875rem;
+	}
+
+	ul {
+		margin: 1rem 0 0;
+		padding-left: 1.25rem;
 	}
 </style>

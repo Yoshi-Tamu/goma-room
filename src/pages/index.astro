@@ -15,6 +15,10 @@ const tils = (await getCollection('tils')).sort(
 ---
 
 <BaseLayout title="ごま部屋" description="ごまの制作物と日々の記録を置く個人サイトです。">
+	<div class="intro-overlay" data-home-intro aria-hidden="true">
+		<span>/goma-room</span>
+	</div>
+
 	<header class="intro">
 		<h1>ごま部屋</h1>
 		<p>高専生。Webとかいろいろ作っています。勉強中。</p>
@@ -51,7 +55,7 @@ const tils = (await getCollection('tils')).sort(
 	<section aria-labelledby="tils-heading">
 		<div class="section-heading">
 			<h2 id="tils-heading">/til</h2>
-			<a href="/tils/">すべて見る</a>
+			<a href="/til/">すべて見る</a>
 		</div>
 		<TilList tils={tils.slice(0, 5)} />
 	</section>
@@ -70,7 +74,80 @@ const tils = (await getCollection('tils')).sort(
 	</section>
 </BaseLayout>
 
+<script>
+	const intro = document.querySelector<HTMLElement>('[data-home-intro]');
+
+	if (intro) {
+		let shouldPlay = false;
+
+		try {
+			shouldPlay = sessionStorage.getItem('goma-room-intro-seen') !== '1';
+			if (shouldPlay) sessionStorage.setItem('goma-room-intro-seen', '1');
+		} catch {
+			shouldPlay = true;
+		}
+
+		const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+		if (!shouldPlay || reducedMotion) {
+			intro.remove();
+		} else {
+			intro.addEventListener('animationend', () => intro.remove(), { once: true });
+		}
+	}
+</script>
+
 <style>
+	.intro-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 1000;
+		display: grid;
+		place-items: center;
+		background: #000;
+		color: #fff;
+		pointer-events: none;
+		animation: intro-overlay-out 1.3s ease 0.2s forwards;
+	}
+
+	.intro-overlay span {
+		font-size: clamp(1.1rem, 3vw, 1.5rem);
+		letter-spacing: 0.02em;
+		animation: intro-text-in 0.45s ease both;
+	}
+
+	@keyframes intro-text-in {
+		from {
+			opacity: 0;
+			transform: translateY(0.2rem);
+		}
+
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes intro-overlay-out {
+		0%,
+		65% {
+			opacity: 1;
+			visibility: visible;
+		}
+
+		100% {
+			opacity: 0;
+			visibility: hidden;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.intro-overlay {
+			display: none;
+			animation: none;
+		}
+	}
+
 	.intro {
 		margin-bottom: 4rem;
 	}

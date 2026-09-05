@@ -29,13 +29,14 @@ const publishedAt = new Intl.DateTimeFormat('ja-JP', {
 		<header class="til-header">
 			<h1>{til.data.title}</h1>
 			<time datetime={til.data.publishedAt.toISOString()}>{publishedAt}</time>
+			<p class="article-description">{til.data.description}</p>
 		</header>
 
 		<div class="til-body">
 			<Content />
 		</div>
 
-		<p class="back"><a href="/tils/">← /tilへ戻る</a></p>
+		<p class="back"><a href="/til/">← /tilへ戻る</a></p>
 	</article>
 </BaseLayout>
 
@@ -54,6 +55,11 @@ const publishedAt = new Intl.DateTimeFormat('ja-JP', {
 	time {
 		color: var(--muted);
 		font-size: 0.875rem;
+	}
+
+	.article-description {
+		margin: 0.75rem 0 0;
+		color: var(--muted);
 	}
 
 	.til-body {

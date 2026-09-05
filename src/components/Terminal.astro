@@ -1,0 +1,466 @@
+<div class="terminal-spacer" aria-hidden="true"></div>
+
+<section class="terminal-dock" data-terminal data-open="false" aria-label="FLASH TERMINAL">
+	<div
+		class="terminal-panel-track"
+		id="flash-terminal-panel"
+		data-terminal-panel
+		aria-hidden="true"
+		inert
+	>
+		<div class="terminal-panel-inner">
+			<div class="terminal-window">
+				<div class="terminal-title">goma-room shell</div>
+				<div class="terminal-output" data-terminal-output role="log" aria-live="polite"></div>
+				<form class="terminal-form" data-terminal-form>
+					<span aria-hidden="true">&gt;</span>
+				<label class="visually-hidden" for="terminal-input">Command input</label>
+					<input
+						id="terminal-input"
+						data-terminal-input
+						type="text"
+						autocomplete="off"
+						autocapitalize="off"
+						spellcheck="false"
+					/>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div class="terminal-toggle-row">
+		<button
+			class="terminal-toggle"
+			data-terminal-toggle
+			type="button"
+			aria-expanded="false"
+			aria-controls="flash-terminal-panel"
+		>
+			FLASH TERMINAL
+		</button>
+	</div>
+</section>
+
+<script>
+	type LineKind = 'command' | 'output' | 'error';
+
+	interface TerminalLine {
+		kind: LineKind;
+		text: string;
+	}
+
+	interface TerminalState {
+		isOpen: boolean;
+		history: string[];
+		lines: TerminalLine[];
+		draft: string;
+		brand: 'goma' | 'dora';
+	}
+
+	interface CommandResult {
+		lines?: string[];
+		error?: string;
+		navigateTo?: string;
+		clear?: boolean;
+	}
+
+	interface CommandDefinition {
+		hidden?: boolean;
+		run: (args: string[]) => CommandResult;
+	}
+
+	const storageKey = 'goma-room-terminal-v2';
+	const terminal = document.querySelector<HTMLElement>('[data-terminal]');
+	const toggle = terminal?.querySelector<HTMLButtonElement>('[data-terminal-toggle]');
+	const panel = terminal?.querySelector<HTMLElement>('[data-terminal-panel]');
+	const output = terminal?.querySelector<HTMLElement>('[data-terminal-output]');
+	const form = terminal?.querySelector<HTMLFormElement>('[data-terminal-form]');
+	const input = terminal?.querySelector<HTMLInputElement>('[data-terminal-input]');
+
+	const initialState = (): TerminalState => ({
+		isOpen: false,
+		history: [],
+		lines: [],
+		draft: '',
+		brand: 'goma',
+	});
+
+	function restoreState(): TerminalState {
+		try {
+			const saved = sessionStorage.getItem(storageKey);
+			if (!saved) return initialState();
+			const parsed = JSON.parse(saved) as Partial<TerminalState>;
+			return {
+				isOpen: Boolean(parsed.isOpen),
+				history: Array.isArray(parsed.history)
+					? parsed.history.filter((item): item is string => typeof item === 'string')
+					: [],
+				lines: Array.isArray(parsed.lines)
+					? parsed.lines.filter(
+							(line): line is TerminalLine =>
+								typeof line?.text === 'string' &&
+								(line.kind === 'command' || line.kind === 'output' || line.kind === 'error'),
+						)
+					: [],
+				draft: typeof parsed.draft === 'string' ? parsed.draft : '',
+				brand: parsed.brand === 'dora' ? 'dora' : 'goma',
+			};
+		} catch {
+			return initialState();
+		}
+	}
+
+	let state = restoreState();
+	let historyIndex = state.history.length;
+	let historyDraft = state.draft;
+
+	function saveState() {
+		try {
+			sessionStorage.setItem(storageKey, JSON.stringify(state));
+		} catch {
+			// Keep the shell usable even when storage is unavailable.
+		}
+	}
+
+	function applyBrand() {
+		if (state.brand !== 'dora') return;
+
+		document.title = document.title.replaceAll('ごま部屋', 'どら部屋');
+		const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+		let node = walker.nextNode();
+
+		while (node) {
+			const parent = node.parentElement;
+			if (parent && !parent.closest('script, style, template, noscript')) {
+				node.textContent = node.textContent?.replaceAll('ごま部屋', 'どら部屋') ?? '';
+			}
+			node = walker.nextNode();
+		}
+	}
+
+	function formatDateTime(date: Date) {
+		const pad = (value: number) => String(value).padStart(2, '0');
+		return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+	}
+
+	function renderLines() {
+		if (!output) return;
+		output.replaceChildren();
+
+		for (const line of state.lines) {
+			const element = document.createElement('div');
+			element.className = `terminal-line ${line.kind}`;
+			element.textContent = line.kind === 'command' ? `> ${line.text}` : line.text;
+			output.append(element);
+		}
+
+		output.scrollTop = output.scrollHeight;
+	}
+
+	function setOpen(isOpen: boolean, focusInput = false) {
+		if (!terminal || !toggle || !panel) return;
+		state.isOpen = isOpen;
+		terminal.dataset.open = String(isOpen);
+		toggle.setAttribute('aria-expanded', String(isOpen));
+		panel.setAttribute('aria-hidden', String(!isOpen));
+		panel.inert = !isOpen;
+		toggle.textContent = isOpen ? 'CLOSE TERMINAL' : 'FLASH TERMINAL';
+		saveState();
+		if (isOpen && focusInput) requestAnimationFrame(() => input?.focus());
+	}
+
+	const routes: Record<string, string> = {
+		home: '/',
+		now: '/now/',
+		til: '/til/',
+		works: '/works/',
+		posts: '/posts/',
+	};
+
+	const commands: Record<string, CommandDefinition> = {
+		help: {
+			run: () => ({
+				lines: Object.entries(commands)
+					.filter(([, command]) => !command.hidden)
+					.map(([name]) => name),
+			}),
+		},
+		ls: {
+			run: () => ({ lines: ['now/', 'til/', 'works/', 'posts/'] }),
+		},
+		pwd: {
+			run: () => ({ lines: ['/home/goma'] }),
+		},
+		cd: {
+			run: (args) => {
+				if (args.length === 0) return { error: 'cd: missing operand' };
+				const destination = args[0].replace(/^\/+|\/+$/g, '') || 'home';
+				const navigateTo = routes[destination];
+				return navigateTo
+					? { lines: [`opening ${navigateTo}`], navigateTo }
+					: { error: `cd: no such page: ${args[0]}` };
+			},
+		},
+		home: {
+			run: () => ({ lines: ['opening /'], navigateTo: routes.home }),
+		},
+		now: {
+			run: () => ({ lines: ['opening /now/'], navigateTo: routes.now }),
+		},
+		til: {
+			run: () => ({ lines: ['opening /til/'], navigateTo: routes.til }),
+		},
+		works: {
+			run: () => ({ lines: ['opening /works/'], navigateTo: routes.works }),
+		},
+		posts: {
+			run: () => ({ lines: ['opening /posts/'], navigateTo: routes.posts }),
+		},
+		date: {
+			run: () => ({ lines: [formatDateTime(new Date())] }),
+		},
+		clear: {
+			run: () => ({ clear: true }),
+		},
+		goma: {
+			hidden: true,
+			run: () => ({ lines: ['welcome to goma room.'] }),
+		},
+		dora: {
+			hidden: true,
+			run: () => {
+				state.brand = 'dora';
+				applyBrand();
+				return { lines: ['dora room.'] };
+			},
+		},
+	};
+
+	function appendLines(kind: LineKind, lines: string[]) {
+		for (const text of lines) state.lines.push({ kind, text });
+	}
+
+	function execute(rawCommand: string) {
+		const commandText = rawCommand.trim();
+		if (!commandText) return;
+
+		state.history.push(commandText);
+		historyIndex = state.history.length;
+		historyDraft = '';
+		state.draft = '';
+		appendLines('command', [commandText]);
+
+		const [name, ...args] = commandText.split(/\s+/);
+		const command = commands[name.toLowerCase()];
+
+		if (!command) {
+			appendLines('error', [`command not found: ${name}`, 'try `help`']);
+			renderLines();
+			saveState();
+			return;
+		}
+
+		const result = command.run(args);
+		if (result.clear) state.lines = [];
+		if (result.lines) appendLines('output', result.lines);
+		if (result.error) appendLines('error', [result.error]);
+		renderLines();
+		saveState();
+
+		if (result.navigateTo) window.location.assign(result.navigateTo);
+	}
+
+	if (terminal && toggle && panel && output && form && input) {
+		applyBrand();
+		renderLines();
+		input.value = state.draft;
+		setOpen(state.isOpen);
+
+		toggle.addEventListener('click', () => setOpen(!state.isOpen, true));
+
+		form.addEventListener('submit', (event) => {
+			event.preventDefault();
+			const value = input.value;
+			input.value = '';
+			state.draft = '';
+			historyDraft = '';
+			if (!value.trim()) {
+				saveState();
+				return;
+			}
+			execute(value);
+		});
+
+		input.addEventListener('input', () => {
+			state.draft = input.value;
+			historyDraft = input.value;
+			saveState();
+		});
+
+		input.addEventListener('keydown', (event) => {
+			if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+			event.preventDefault();
+			if (state.history.length === 0) return;
+
+			if (event.key === 'ArrowUp') {
+				if (historyIndex === state.history.length) historyDraft = input.value;
+				historyIndex = Math.max(0, historyIndex - 1);
+				input.value = state.history[historyIndex] ?? '';
+			} else {
+				historyIndex = Math.min(state.history.length, historyIndex + 1);
+				input.value =
+					historyIndex === state.history.length ? historyDraft : (state.history[historyIndex] ?? '');
+			}
+
+			state.draft = input.value;
+			input.setSelectionRange(input.value.length, input.value.length);
+			saveState();
+		});
+
+		window.addEventListener('beforeunload', saveState);
+	}
+</script>
+
+<style>
+	.terminal-spacer {
+		height: 2.75rem;
+		flex: none;
+	}
+
+	.terminal-dock {
+		position: fixed;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		z-index: 60;
+		color: #fff;
+		font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+	}
+
+	.terminal-panel-track {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition: grid-template-rows 180ms ease;
+	}
+
+	.terminal-dock[data-open='true'] .terminal-panel-track {
+		grid-template-rows: 1fr;
+	}
+
+	.terminal-panel-inner {
+		overflow: hidden;
+	}
+
+	.terminal-window {
+		display: flex;
+		width: min(100% - 2rem, 56rem);
+		height: min(23rem, 58vh);
+		margin-inline: auto;
+		border: 1px solid #444;
+		border-bottom: 0;
+		background: #090909;
+		flex-direction: column;
+	}
+
+	.terminal-title {
+		padding: 0.55rem 0.8rem;
+		border-bottom: 1px solid #444;
+		color: #fff;
+		font-size: 0.78rem;
+	}
+
+	.terminal-output {
+		min-height: 0;
+		padding: 0.8rem;
+		overflow-y: auto;
+		flex: 1;
+		font-size: 0.82rem;
+		line-height: 1.65;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+
+	:global(.terminal-line.command) {
+		margin-top: 0.45rem;
+		font-weight: 700;
+	}
+
+	:global(.terminal-line.error) {
+		color: #fff;
+	}
+
+	.terminal-form {
+		display: grid;
+		padding: 0.65rem 0.8rem;
+		border-top: 1px solid #444;
+		align-items: center;
+		grid-template-columns: auto minmax(0, 1fr);
+		gap: 0.55rem;
+	}
+
+	.terminal-form input {
+		width: 100%;
+		min-width: 0;
+		padding: 0;
+		border: 0;
+		outline: 0;
+		background: transparent;
+		color: inherit;
+		font: inherit;
+	}
+
+	.terminal-toggle-row {
+		border-top: 1px solid #444;
+		background: #090909;
+	}
+
+	.terminal-toggle {
+		display: block;
+		min-height: 2.75rem;
+		margin-left: auto;
+		padding: 0 1.25rem;
+		border: 0;
+		border-left: 1px solid #444;
+		background: transparent;
+		color: #fff;
+		font: inherit;
+		font-size: 0.75rem;
+		letter-spacing: 0.04em;
+		cursor: pointer;
+	}
+
+	.terminal-toggle:hover,
+	.terminal-toggle:focus-visible {
+		background: #222;
+	}
+
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	@media (max-width: 36rem) {
+		.terminal-window {
+			width: 100%;
+			height: min(21rem, 62vh);
+			border-inline: 0;
+		}
+
+		.terminal-toggle {
+			padding-inline: 1rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.terminal-panel-track {
+			transition: none;
+		}
+	}
+</style>
